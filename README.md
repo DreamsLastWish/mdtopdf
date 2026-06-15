@@ -1,20 +1,21 @@
 # mdtopdf
 
-`mdtopdf` 是一个 macOS 本地 Markdown 转 PDF 小工具，支持中文、英文、表格和 LaTeX 风格公式。它底层使用 `pandoc + xelatex`，所以比简单的浏览器打印更适合中文资料、课程笔记、复习题库和带公式的 Markdown。
+`mdtopdf` 是一个本地 Markdown 转 PDF 小工具，支持 macOS 和 Windows。它可以把中文、英文、表格和 LaTeX 风格公式一起转成 PDF，底层使用 `pandoc + xelatex`，适合课程笔记、复习题库、实验报告和带公式的 Markdown 文档。
 
 ## 功能
 
 - 终端命令：`mdtopdf /path/to/aaa.md`
-- 自动在 Markdown 同目录生成 PDF：`/path/to/aaa.pdf`
+- Windows 终端命令：`mdtopdf C:\path\to\aaa.md`
+- 自动在 Markdown 同目录生成 PDF：`aaa.md` -> `aaa.pdf`
 - GUI 小窗口：支持选择文件，也支持直接粘贴 Markdown 路径
-- 默认中文字体：`PingFang SC`
+- macOS 默认中文字体：`PingFang SC`
+- Windows 默认中文字体：`Microsoft YaHei`
 - 默认英文字体：`Times New Roman`
-- 默认等宽字体：`Menlo`
 - 支持表格、标题元信息、美元符号公式和本地图片相对路径
 
-## 安装前准备
+## 依赖
 
-本工具需要 3 个东西：
+本工具需要：
 
 ```bash
 python3
@@ -22,7 +23,11 @@ pandoc
 xelatex
 ```
 
-先检查是否已经安装：
+其中 `xelatex` 通常来自 MacTeX、MiKTeX 或 TeX Live。
+
+## macOS 安装
+
+先检查依赖：
 
 ```bash
 command -v python3
@@ -30,15 +35,13 @@ command -v pandoc
 command -v xelatex
 ```
 
-如果三条命令都能输出路径，就可以直接进入“安装 mdtopdf”。
-
-如果缺少 `pandoc`，用 Homebrew 安装：
+如果缺少 `pandoc`：
 
 ```bash
 brew install pandoc
 ```
 
-如果缺少 `xelatex`，安装 MacTeX：
+如果缺少 `xelatex`：
 
 ```bash
 brew install --cask mactex
@@ -50,8 +53,6 @@ MacTeX 安装后，如果当前终端暂时找不到 `xelatex`，请打开一个
 export PATH="/Library/TeX/texbin:$PATH"
 ```
 
-## 安装 mdtopdf
-
 克隆仓库：
 
 ```bash
@@ -59,15 +60,10 @@ git clone https://github.com/DreamsLastWish/mdtopdf.git
 cd mdtopdf
 ```
 
-给脚本执行权限：
+安装 `mdtopdf` 命令：
 
 ```bash
 chmod +x install.sh mdtopdf md-to-pdf.command
-```
-
-运行安装脚本：
-
-```bash
 ./install.sh
 ```
 
@@ -83,43 +79,125 @@ chmod +x install.sh mdtopdf md-to-pdf.command
 /usr/local/bin/mdtopdf
 ```
 
-安装完成后，验证命令是否可用：
+验证：
 
 ```bash
 command -v mdtopdf
 mdtopdf
 ```
 
-如果 `command -v mdtopdf` 没有输出，但安装脚本显示成功，请打开新终端，或执行：
+如果刚安装完仍然找不到命令，请打开新终端，或执行：
 
 ```bash
 rehash
 ```
 
+## Windows 安装
+
+先打开 PowerShell，检查依赖：
+
+```powershell
+python --version
+pandoc --version
+xelatex --version
+```
+
+如果缺少 Python，可以安装 Python 3：
+
+```powershell
+winget install --id Python.Python.3
+```
+
+如果缺少 Pandoc：
+
+```powershell
+winget install --id JohnMacFarlane.Pandoc
+```
+
+如果缺少 `xelatex`，推荐安装 MiKTeX：
+
+```powershell
+winget install --id MiKTeX.MiKTeX
+```
+
+安装完成后，重新打开 PowerShell，再检查：
+
+```powershell
+python --version
+pandoc --version
+xelatex --version
+```
+
+克隆仓库：
+
+```powershell
+git clone https://github.com/DreamsLastWish/mdtopdf.git
+cd mdtopdf
+```
+
+安装 `mdtopdf` 命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-windows.ps1
+```
+
+安装脚本会创建：
+
+```text
+%LOCALAPPDATA%\mdtopdf\bin\mdtopdf.bat
+```
+
+并把这个目录加入当前用户的 `PATH`。安装完成后，请打开一个新的 PowerShell 窗口，然后验证：
+
+```powershell
+where mdtopdf
+mdtopdf
+```
+
 ## 终端使用
 
-最常用命令：
+macOS：
 
 ```bash
 mdtopdf /Users/yourname/Documents/aaa.md
 ```
 
-输出文件会自动生成在同一个文件夹：
+Windows：
 
-```text
-/Users/yourname/Documents/aaa.pdf
+```powershell
+mdtopdf C:\Users\yourname\Documents\aaa.md
 ```
 
-如果路径里有空格，请加引号：
+输出文件会自动生成在 Markdown 同目录：
+
+```text
+aaa.md -> aaa.pdf
+```
+
+如果路径里有空格，请加引号。
+
+macOS：
 
 ```bash
 mdtopdf "/Users/yourname/My Notes/aaa.md"
+```
+
+Windows：
+
+```powershell
+mdtopdf "C:\Users\yourname\My Notes\aaa.md"
 ```
 
 也可以通过 Python 脚本直接运行：
 
 ```bash
 python3 md_to_pdf_converter.py /path/to/aaa.md
+```
+
+Windows：
+
+```powershell
+python .\md_to_pdf_converter.py C:\path\to\aaa.md
 ```
 
 指定输出路径：
@@ -143,12 +221,24 @@ python3 md_to_pdf_converter.py /path/to/aaa.md \
   --mono-font "Menlo"
 ```
 
+Windows 可改成：
+
+```powershell
+python .\md_to_pdf_converter.py C:\path\to\aaa.md --cjk-font "Microsoft YaHei"
+```
+
 ## GUI 使用
 
-双击：
+macOS 双击：
 
 ```text
 md-to-pdf.command
+```
+
+Windows 可以运行：
+
+```powershell
+python .\md_to_pdf_converter.py
 ```
 
 打开窗口后有两种输入方式：
@@ -198,7 +288,7 @@ mdtopdf /path/to/test.md
 
 ### `mdtopdf: command not found`
 
-先确认安装脚本是否执行过：
+macOS 先确认安装脚本是否执行过：
 
 ```bash
 ./install.sh
@@ -216,34 +306,68 @@ command -v mdtopdf
 rehash
 ```
 
+### Windows 提示找不到 `mdtopdf`
+
+重新打开一个 PowerShell 窗口，再运行：
+
+```powershell
+where mdtopdf
+```
+
+如果仍然找不到，请重新执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-windows.ps1
+```
+
 ### `Missing required tool: pandoc`
 
-安装 pandoc：
+macOS：
 
 ```bash
 brew install pandoc
 ```
 
+Windows：
+
+```powershell
+winget install --id JohnMacFarlane.Pandoc
+```
+
 ### `Missing required tool: xelatex`
 
-安装 MacTeX：
+macOS：
 
 ```bash
 brew install --cask mactex
 ```
 
-然后打开新终端，再检查：
+Windows：
+
+```powershell
+winget install --id MiKTeX.MiKTeX
+```
+
+安装后请打开新终端，再检查：
 
 ```bash
-command -v xelatex
+xelatex --version
 ```
 
 ### 中文乱码或字体报错
 
-默认使用 macOS 自带的 `PingFang SC`。如果系统里没有这个字体，可以换成其它中文字体：
+macOS 默认使用 `PingFang SC`，Windows 默认使用 `Microsoft YaHei`。如果系统里没有对应字体，可以换成其它中文字体。
+
+macOS 示例：
 
 ```bash
 python3 md_to_pdf_converter.py /path/to/aaa.md --cjk-font "Songti SC"
+```
+
+Windows 示例：
+
+```powershell
+python .\md_to_pdf_converter.py C:\path\to\aaa.md --cjk-font "SimSun"
 ```
 
 ### 图片无法显示
@@ -258,17 +382,29 @@ python3 md_to_pdf_converter.py /path/to/aaa.md --cjk-font "Songti SC"
 
 ## 卸载
 
-如果安装到了 `/opt/homebrew/bin`：
+macOS 如果安装到了 `/opt/homebrew/bin`：
 
 ```bash
 rm /opt/homebrew/bin/mdtopdf
 ```
 
-如果安装到了 `/usr/local/bin`：
+macOS 如果安装到了 `/usr/local/bin`：
 
 ```bash
 rm /usr/local/bin/mdtopdf
 ```
 
-卸载只会删除终端命令链接，不会删除本仓库文件。
+Windows：
+
+```powershell
+Remove-Item "$env:LOCALAPPDATA\mdtopdf\bin\mdtopdf.bat"
+```
+
+然后可以在“系统属性 -> 环境变量”里从当前用户的 `Path` 删除：
+
+```text
+%LOCALAPPDATA%\mdtopdf\bin
+```
+
+卸载只会删除终端命令，不会删除本仓库文件。
 

@@ -14,26 +14,77 @@ from shutil import which
 
 
 APP_NAME = "MD to PDF Converter"
-DEFAULT_CJK_FONT = "PingFang SC"
-DEFAULT_MAIN_FONT = "Times New Roman"
-DEFAULT_MONO_FONT = "Menlo"
 DEFAULT_MARGIN = "2cm"
 
-EXTRA_PATHS = [
-    "/opt/homebrew/bin",
-    "/usr/local/bin",
-    "/Library/TeX/texbin",
-    "/opt/anaconda3/bin",
-    "/usr/bin",
-    "/bin",
-    "/usr/sbin",
-    "/sbin",
-]
+
+def default_cjk_font() -> str:
+    if os.name == "nt":
+        return "Microsoft YaHei"
+    if sys.platform == "darwin":
+        return "PingFang SC"
+    return "Noto Sans CJK SC"
+
+
+def default_mono_font() -> str:
+    if os.name == "nt":
+        return "Consolas"
+    if sys.platform == "darwin":
+        return "Menlo"
+    return "DejaVu Sans Mono"
+
+
+DEFAULT_CJK_FONT = default_cjk_font()
+DEFAULT_MAIN_FONT = "Times New Roman"
+DEFAULT_MONO_FONT = default_mono_font()
+
+
+def extra_paths() -> list[str]:
+    if os.name != "nt":
+        return [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/Library/TeX/texbin",
+            "/opt/anaconda3/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+        ]
+
+    candidates: list[Path] = []
+    program_files = [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]
+    local_app_data = os.environ.get("LOCALAPPDATA")
+
+    for base in program_files:
+        if not base:
+            continue
+        root = Path(base)
+        candidates.extend(
+            [
+                root / "Pandoc",
+                root / "MiKTeX" / "miktex" / "bin" / "x64",
+                root / "MiKTeX" / "miktex" / "bin",
+            ]
+        )
+
+    if local_app_data:
+        candidates.extend(
+            [
+                Path(local_app_data) / "Pandoc",
+                Path(local_app_data) / "Programs" / "MiKTeX" / "miktex" / "bin" / "x64",
+                Path(local_app_data) / "Programs" / "MiKTeX" / "miktex" / "bin",
+            ]
+        )
+
+    for year in range(2020, 2031):
+        candidates.append(Path(f"C:/texlive/{year}/bin/windows"))
+
+    return [str(path) for path in candidates if path.exists()]
 
 
 def ensure_path() -> None:
     current = os.environ.get("PATH", "")
-    parts = [p for p in EXTRA_PATHS if p and p not in current.split(os.pathsep)]
+    parts = [p for p in extra_paths() if p and p not in current.split(os.pathsep)]
     if parts:
         os.environ["PATH"] = os.pathsep.join(parts + [current])
 
@@ -44,11 +95,25 @@ def find_tool(name: str) -> str:
     if not found:
         raise RuntimeError(
             f"Missing required tool: {name}\n"
-            "Install pandoc and a TeX engine first. On macOS, Homebrew + MacTeX works well:\n"
+            "Install pandoc and a TeX engine first.\n"
+            "macOS:\n"
             "  brew install pandoc\n"
-            "  brew install --cask mactex"
+            "  brew install --cask mactex\n"
+            "Windows:\n"
+            "  winget install --id JohnMacFarlane.Pandoc\n"
+            "  winget install --id MiKTeX.MiKTeX"
         )
     return found
+
+
+def open_pdf(path: Path) -> None:
+    if os.name == "nt":
+        os.startfile(str(path))  # type: ignore[attr-defined]
+        return
+    if sys.platform == "darwin":
+        subprocess.Popen(["open", str(path)])
+        return
+    subprocess.Popen(["xdg-open", str(path)])
 
 
 def default_output_path(md_path: Path) -> Path:
@@ -283,7 +348,7 @@ def run_gui() -> int:
             status_var.set(f"Created: {out.name}")
             convert_button.configure(state="normal")
             if open_var.get():
-                subprocess.Popen(["open", str(out)])
+                open_pdf(out)
 
         root.after(0, finish)
 
@@ -308,4 +373,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
